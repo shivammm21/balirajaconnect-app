@@ -80,7 +80,7 @@ class _SigninPageState extends State<SigninPage> {
 
   Future<void> sendOtp(String phoneNumber) async {
     final response = await http.post(
-      Uri.parse('http://localhost:8585/api/login'),
+      Uri.parse('http://192.168.31.230:8585/api/login'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "mobileno": phoneNumber
@@ -104,7 +104,7 @@ class _SigninPageState extends State<SigninPage> {
 
   Future<void> verify(String phoneno, String otp) async {
     final response = await http.post(
-      Uri.parse('http://localhost:8585/api/login/otp-verify'),
+      Uri.parse('http://192.168.31.230:8585/api/login/otp-verify'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "mobileno": phoneno,

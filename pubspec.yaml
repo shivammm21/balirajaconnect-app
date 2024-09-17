@@ -38,6 +38,7 @@ dependencies:
   http: ^1.2.2
   connectivity_plus: ^4.0.1
   image_picker: ^0.8.6  # Add this line
+  permission_handler: ^10.2.0
 
 dev_dependencies:
   flutter_test:

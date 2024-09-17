@@ -1,6 +1,7 @@
 import 'dart:io';  // for File class
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart'; // Import for handling permissions
 
 class AddProductPage extends StatefulWidget {
   @override
@@ -37,24 +38,52 @@ class _AddProductPageState extends State<AddProductPage> {
     super.dispose();
   }
 
+  // Function to request camera permissions
+  Future<bool> _requestCameraPermission() async {
+    PermissionStatus status = await Permission.camera.request();
+
+    if (status == PermissionStatus.granted) {
+      // Request camera permission
+      return true;
+    }
+
+    if (status == PermissionStatus.denied) {
+      // Request camera permission
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('permission is required to proceed')),
+      );
+    }
+
+    if (status == PermissionStatus.permanentlyDenied) {
+      // If permission is permanently denied, open app settings
+      openAppSettings();
+    } 
+
+    return false;
+  }
+
   // Function to pick an image from the camera
   Future _pickImageFromCamera() async {
-    final returnedImage = await ImagePicker().pickImage(source: ImageSource.camera);
-    if (returnedImage == null) return;
+    if (await _requestCameraPermission()) {
+      final returnedImage = await ImagePicker().pickImage(source: ImageSource.camera);
+      if (returnedImage == null) return;
 
-    setState(() {
-      _selectedImage = File(returnedImage.path);
-    });
+      setState(() {
+        _selectedImage = File(returnedImage.path);
+      });
+    }
   }
 
   // Function to pick a video from the camera
   Future _pickVideoFromCamera() async {
-    final returnedVideo = await ImagePicker().pickVideo(source: ImageSource.camera);
-    if (returnedVideo == null) return;
+    if (await _requestCameraPermission()) {
+      final returnedVideo = await ImagePicker().pickVideo(source: ImageSource.camera);
+      if (returnedVideo == null) return;
 
-    setState(() {
-      _selectedVideo = File(returnedVideo.path);
-    });
+      setState(() {
+        _selectedVideo = File(returnedVideo.path);
+      });
+    }
   }
 
   // Function to update the quantity

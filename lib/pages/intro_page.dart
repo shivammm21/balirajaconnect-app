@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'signin_page.dart'; // Import the sign-in page
 
+
 class IntroPage extends StatefulWidget {
   const IntroPage({super.key});
 
@@ -10,6 +11,9 @@ class IntroPage extends StatefulWidget {
 
 class _IntroPageState extends State<IntroPage> {
   String? selectedLanguage; // To hold the selected language
+  
+
+  
 
   @override
   Widget build(BuildContext context) {
@@ -71,19 +75,20 @@ class _IntroPageState extends State<IntroPage> {
                 ),
                 // Get Started Button with larger font size
                 ElevatedButton(
-                  onPressed: () {
-                    if (selectedLanguage != null) {
-                      // Navigate to sign-in page if a language is selected
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SigninPage()),
-                      );
-                    } else {
-                      // Show a message if no language is selected
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please select a language')),
-                      );
-                    }
+                  onPressed: () async {                
+                      if (selectedLanguage != null) {
+                        // Navigate to sign-in page if permission and language are selected
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const SigninPage()),
+                        );
+                      } else {
+                        // Show a message if no language is selected
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please select a language')),
+                        );
+                      }
+                    
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green[800], // Dark green button
@@ -98,13 +103,13 @@ class _IntroPageState extends State<IntroPage> {
                       Text(
                         'Get Started',
                         style: TextStyle(
-                          color: Colors.white, 
+                          color: Colors.white,
                           fontSize: 18, // Increased font size
-                        ), 
+                        ),
                       ),
                       Icon(
                         Icons.arrow_right_alt,
-                        color: Colors.white, 
+                        color: Colors.white,
                         size: 30, // Increased arrow size
                       ),
                     ],

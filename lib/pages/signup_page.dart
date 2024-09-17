@@ -33,7 +33,7 @@ class _SignupPageState extends State<SignupPage> {
 
   Future<void> register(String name, String type, String phoneNumber) async {
     final response = await http.post(
-      Uri.parse('http://localhost:8585/api/register'),
+      Uri.parse('http://192.168.31.230:8585/api/register'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "name": name,
