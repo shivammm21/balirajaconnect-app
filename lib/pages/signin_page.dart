@@ -6,6 +6,9 @@ import 'farmer_dash_page.dart';
 import 'signup_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
 
 // Uncomment or define this if you have the DashboardPage widget somewhere else in your project
 // import 'dashboard_page.dart';
@@ -28,6 +31,7 @@ class _SigninPageState extends State<SigninPage> {
   bool resendEnabled = false; // Controls resend button state
   int secondsRemaining = 59; // Timer countdown for resend button
   Timer? countdownTimer;
+  bool hasStoragePermission = false;
   bool otpSent = false; // New flag to track OTP sent status
 
   @override
@@ -36,6 +40,7 @@ class _SigninPageState extends State<SigninPage> {
     if (widget.mobileNumber != null) {
       mobileController.text = widget.mobileNumber!;
     }
+    requestStoragePermission();
   }
 
   @override
@@ -78,7 +83,50 @@ class _SigninPageState extends State<SigninPage> {
     });
   }
 
+  Future<String?> getJwtFromFile() async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/jwt_token.txt');
+      if (await file.exists()) {
+        return await file.readAsString();
+      }
+    } catch (e) {
+      print('Error reading JWT file: $e');
+    }
+    return null;
+  }
+
+
+
+  Future<void> requestStoragePermission() async {
+    var status = await Permission.storage.request();
+    if (status.isGranted) {
+      setState(() {
+        hasStoragePermission = true;
+      });
+    } else {
+      // Handle permission denial
+      print("Storage permission denied");
+    }
+  }
+
+  Future<void> storeJwtToFile(String token) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/jwt_token.txt');
+      await file.writeAsString(token);
+      print('JWT token saved to: ${file.path}');
+    } catch (e) {
+      print('Error writing JWT to file: $e');
+    }
+  }
+
   Future<void> sendOtp(String phoneNumber) async {
+    if (!hasStoragePermission) {
+      print("Storage permission not granted");
+      return;
+    }
+
     final response = await http.post(
       Uri.parse('http://localhost:8585/api/login'),
       headers: {"Content-Type": "application/json"},
@@ -90,19 +138,24 @@ class _SigninPageState extends State<SigninPage> {
     if (response.statusCode == 200) {
       print("OTP Sent");
       setState(() {
-        otpVisible = true; // Show OTP input field
-        mobileDisabled = true; // Disable mobile input and SEND OTP button
-        startTimer(); // Start the timer for OTP resend
+        otpVisible = true;
+        mobileDisabled = true;
+        startTimer();
       });
     } else {
       print("Failed to send OTP");
       setState(() {
-        errorMessage = "Failed to send OTP"; // Display error message
+        errorMessage = "Failed to send OTP";
       });
     }
   }
 
   Future<void> verify(String phoneno, String otp) async {
+    if (!hasStoragePermission) {
+      print("Storage permission not granted");
+      return;
+    }
+
     final response = await http.post(
       Uri.parse('http://localhost:8585/api/login/otp-verify'),
       headers: {"Content-Type": "application/json"},
@@ -116,41 +169,25 @@ class _SigninPageState extends State<SigninPage> {
       print("Authenticated");
       final responseData = jsonDecode(response.body);
 
-      if (responseData['isNewUser'] == true) {
-        // If the user is new, redirect to SignupPage
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SignupPage(
-              mobileno: phoneno, // Pass the mobile number to SignupPage
-            ),
-          ),
-        );
-      } else {
-        // Fetch user type (Assuming responseData contains 'userType')
-        String userType = responseData['userType']; // 'farmer' or 'consumer'
+      // Store the JWT token
+      if (responseData.containsKey('jwtToken')) {
+        await storeJwtToFile(responseData['jwtToken']);
+      }
 
-        if (userType == 'farmer') {
-          // If user is a farmer, navigate to FarmerDashPage
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => FarmerDashPage()),
-          );
-        } else if (userType == 'consumer') {
-          // If user is a consumer, navigate to ConsumerDashPage
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ConsumerDashPage()),
-          );
-        } else {
-          setState(() {
-            errorMessage = "Unknown user type"; // Handle unknown user types
-          });
-        }
+      // Navigate based on user type
+      String userType = responseData['userType'];
+      if (userType == 'farmer') {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => FarmerDashPage()));
+      } else if (userType == 'consumer') {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => ConsumerDashPage()));
+      } else {
+        setState(() {
+          errorMessage = "Unknown user type";
+        });
       }
     } else {
       setState(() {
-        errorMessage = "Invalid OTP"; // Display error message
+        errorMessage = "Invalid OTP";
       });
     }
   }
