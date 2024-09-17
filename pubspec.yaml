@@ -37,7 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   http: ^1.2.2
   connectivity_plus: ^4.0.1
-  image_picker: ^0.8.7+4  # Add this line
+  image_picker: ^0.8.6  # Add this line
 
 dev_dependencies:
   flutter_test:
